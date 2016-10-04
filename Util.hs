@@ -8,8 +8,13 @@ module Util (
 
 import Prelude hiding ((.), (++), writeFile)
 import qualified Data.Text as Text
-import Data.Text (Text, replace)
-import Data.Text.IO (writeFile)
+import Data.Text (Text, replace, unpack)
+import qualified System.Info as SysInfo
+import qualified Data.Char as Char
+import Data.Bits ((.&.), shiftR)
+import qualified Data.Text.IO as TextIO
+import Data.ByteString.Char8 (ByteString)
+import qualified Data.ByteString.Char8 as ByteString
 
 (.) :: Functor f => (a -> b) -> (f a -> f b)
 (.) = fmap
@@ -33,20 +38,40 @@ data Anchor = Anchor { aClass, aId, aHref, aText, aStyle :: Text }
 anchor :: Anchor
 anchor = Anchor{aClass="", aId="", aHref="", aText="", aStyle=""}
 
-greekAlphabet :: [(String, String)]
-greekAlphabet =
-	[ ("alpha"          , "&#945;")
-	, ("beta"           , "&#946;")
-	, ("delta"          , "&#948;")
-	, ("mu"             , "&#956;")
-	, ("nu"             , "&#957;")
-	, ("lambda"         , "&#955;")
-	, ("pi"             , "&#960;")
-	, ("phi"            , "&#966;")
-	, ("rho"            , "&#961;")
-	, ("sigma"          , "&#963;")
-	, ("theta"          , "&#952;")
-	, ("zeta"           , "&#950;")
+writeFile :: FilePath -> Text -> IO ()
+writeFile path content = case SysInfo.os of
+	"mingw32" -> ByteString.writeFile path (toUtf8 content)
+	_ -> TextIO.writeFile path content
+	where
+		toUtf8 :: Text -> ByteString
+		toUtf8 t = ByteString.pack $ map (Char.chr) $ decInt $ map (Char.ord) $ unpack t
 
-	, ("Gamma"          , "&#915;")
-	, ("Pi"             , "&#928;") ]
+		decInt :: [Int] -> [Int]
+		decInt [] = []
+		decInt (c : cs)
+			| c < 0x80     = c : decInt cs -- 7 bits
+			| c < 0x800    = (u8 0xc0 c 6) : (u8 0x80 c 0) : decInt cs -- 5+6 bits
+			| c < 0x10000  = (u8 0xe0 c 12) : (u8 0x80 c 6) : (u8 0x80 c 0) : decInt cs -- 4+6+6 bits
+			| c < 0x200000 = (u8 0xf0 c 18) : (u8 0x80 c 12) : (u8 0x80 c 6) : (u8 0x80 c 0) : decInt cs -- 3+6+6+6 bits
+			| otherwise    = 0xef : 0xbf : 0xbd : decInt cs -- U+FFFD
+		
+		u8 :: Int -> Int -> Int -> Int
+		u8 prefix value shift = prefix + (0x3f .&. shiftR value shift)
+
+greekAlphabet :: [(String, Char)]
+greekAlphabet =
+	[ ("alpha"          , 'α')
+	, ("beta"           , 'β')
+	, ("delta"          , 'δ')
+	, ("mu"             , 'μ')
+	, ("nu"             , 'ν')
+	, ("lambda"         , 'λ')
+	, ("pi"             , 'π')
+	, ("phi"            , 'φ')
+	, ("rho"            , 'ρ')
+	, ("sigma"          , 'σ')
+	, ("theta"          , 'θ')
+	, ("zeta"           , 'ζ')
+
+	, ("Gamma"          , 'Γ')
+	, ("Pi"             , 'Π') ]
