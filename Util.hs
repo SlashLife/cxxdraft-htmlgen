@@ -33,20 +33,20 @@ data Anchor = Anchor { aClass, aId, aHref, aText, aStyle :: Text }
 anchor :: Anchor
 anchor = Anchor{aClass="", aId="", aHref="", aText="", aStyle=""}
 
-greekAlphabet :: [(String, Char)]
+greekAlphabet :: [(String, String)]
 greekAlphabet =
-	[ ("alpha"          , 'α')
-	, ("beta"           , 'β')
-	, ("delta"          , 'δ')
-	, ("mu"             , 'μ')
-	, ("nu"             , 'ν')
-	, ("lambda"         , 'λ')
-	, ("pi"             , 'π')
-	, ("phi"            , 'φ')
-	, ("rho"            , 'ρ')
-	, ("sigma"          , 'σ')
-	, ("theta"          , 'θ')
-	, ("zeta"           , 'ζ')
+	[ ("alpha"          , "&#945;")
+	, ("beta"           , "&#946;")
+	, ("delta"          , "&#948;")
+	, ("mu"             , "&#956;")
+	, ("nu"             , "&#957;")
+	, ("lambda"         , "&#955;")
+	, ("pi"             , "&#960;")
+	, ("phi"            , "&#966;")
+	, ("rho"            , "&#961;")
+	, ("sigma"          , "&#963;")
+	, ("theta"          , "&#952;")
+	, ("zeta"           , "&#950;")
 
-	, ("Gamma"          , 'Γ')
-	, ("Pi"             , 'Π') ]
+	, ("Gamma"          , "&#915;")
+	, ("Pi"             , "&#928;") ]

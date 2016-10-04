@@ -26,6 +26,9 @@ Usage
     Bare            (to generate e.g. intro.execution)
     WithExtension   (to generate e.g. intro.execution.html)
     InSubdir        (to generate e.g. intro.execution/index.html)
+    Windows         (similar to WithExtension, additional file name
+                     transformations apply, e.g. string::op<=.html
+                     becomes string--opless=.html)
 
   The default is WithExtension, since this is suitable
   for direct browsing on a filesystem without a web server.

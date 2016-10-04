@@ -75,6 +75,7 @@ writeSectionFile n sfs title body = do
 	file <- case sfs of
 		Bare -> return n
 		WithExtension -> return $ n ++ ".html"
+		Windows -> return $ n ++ ".html"
 		InSubdir -> do
 			createDirectoryIfMissing True (outputDir ++ n)
 			return $ n ++ "/index.html"
@@ -122,7 +123,7 @@ writeSectionFiles sfs draft = do
 	let secs = Load14882.sections draft
 	forM_ secs $ \section@Section{..} -> do
 		putStr "."; hFlush stdout
-		writeSectionFile (Text.unpack $ abbrAsPath abbreviation) sfs (squareAbbr abbreviation) $
+		writeSectionFile (Text.unpack $ abbrAsPath sfs abbreviation) sfs (squareAbbr abbreviation) $
 			(mconcat $ fst . renderSection (RenderContext (Just section) draft False False False) (Just section) False . chapters draft)
 	putStrLn $ " " ++ show (length secs)
 

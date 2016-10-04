@@ -60,8 +60,8 @@ simpleMacros =
 	, ("textregistered" , "&reg;")
 	, ("Cpp"            , "C++")
 	, ("cppver"         , "201402L")
-	, ("sum"            , "∑")
-	, ("ell"            , "ℓ")
+	, ("sum"            , "&#8721;")
+	, ("ell"            , "&#8467;")
 	, ("shr"            , ">>")
 	, ("cv"             , "cv")
 	, ("shl"            , "&lt;&lt;")
@@ -82,20 +82,20 @@ simpleMacros =
 	, ("tilde"          , "~")
 	, ("hspace"         , " ")
 	, ("equiv"          , "&equiv;")
-	, ("le"             , "≤")
-	, ("leq"            , "≤")
-	, ("ge"             , "≥")
-	, ("geq"            , "≥")
-	, ("neq"            , "≠")
-	, ("cdot"           , "·")
-	, ("cdots"          , "⋯")
-	, ("to"             , "→")
-	, ("rightarrow"     , "→")
-	, ("sqrt"           , "√")
-	, ("lfloor"         , "⌊")
-	, ("rfloor"         , "⌋")
-	, ("lceil"          , "⌈")
-	, ("rceil"          , "⌉")
+	, ("le"             , "&#8804;")
+	, ("leq"            , "&#8804;")
+	, ("ge"             , "&#8805;")
+	, ("geq"            , "&#8805;")
+	, ("neq"            , "&#8800;")
+	, ("cdot"           , "&#183;")
+	, ("cdots"          , "&#8943;")
+	, ("to"             , "&#8594;")
+	, ("rightarrow"     , "&#8594;")
+	, ("sqrt"           , "&#8730;")
+	, ("lfloor"         , "&#8970;")
+	, ("rfloor"         , "&#8971;")
+	, ("lceil"          , "&#8968;")
+	, ("rceil"          , "&#8969;")
 	, (";"              , " ")
 	, ("min"            , "<span class=\"mathrm\">min</span>")
 	, ("max"            , "<span class=\"mathrm\">max</span>")
@@ -110,7 +110,7 @@ simpleMacros =
 	, ("textlangle"     , "&langle;")
 	, ("textrangle"     , "&rangle;")
 	]
-	++ [(n, Text.pack [c]) | (n, c) <- greekAlphabet]
+	++ [(s, Text.pack r) | (s, r) <- greekAlphabet]
 
 makeSpan, makeDiv, makeBnfTable, makeBnfPre :: [String]
 makeSpan = words "indented center"
@@ -152,7 +152,7 @@ instance Render LaTeX where
 	render (TeXSeq x y               ) = liftM2 (++) (render x) (render y)
 	render (TeXRaw x                 ) = \ctx ->
 	                                     (if rawHyphens ctx then id
-	                                         else replace "--" "–" . replace "---" "—")
+	                                         else replace "--" "&#8211;" . replace "---" "&#8212;")
 	                                   $ (if rawTilde ctx then id else replace "~" " ")
 	                                   $ replace ">" "&gt;"
 	                                   $ replace "<" "&lt;"
@@ -181,7 +181,7 @@ instance Render LaTeX where
 		\sec ->
 		xml "i" [] $ render anchor{aHref=grammarNameRef section name, aText=name ++ render otherArgs sec} sec
 	render (TeXComm "bigoh" [FixArg content]) =
-		spanTag "math" . ("Ο(" ++) . (++ ")") . renderMath content
+		spanTag "math" . ("&#927;(" ++) . (++ ")") . renderMath content
 	render (TeXComm "texttt" [FixArg x]) = \ctx -> "<span class='texttt'>" ++ render x ctx{rawHyphens=True} ++ "</span>"
 	render (TeXComm "textit" [FixArg x]) = ("<i>" ++) . (++ "</i>") . render x
 	render (TeXComm "textit" [FixArg x, OptArg y]) = \sec -> "<i>" ++ render x sec ++ "</i>[" ++ render y sec ++ "]"
@@ -250,7 +250,7 @@ instance Render IndexTree where
 renderTab :: Bool -> Table -> RenderContext -> Text
 renderTab stripTab Table{..} sec =
 	xml "div" [("class", "numberedTable"), ("id", id_)] $ -- todo: multiple abbrs?
-		"Table " ++ render anchor{aText = render tableNumber sec, aHref = "#" ++ id_} sec ++ " — " ++
+		"Table " ++ render anchor{aText = render tableNumber sec, aHref = "#" ++ id_} sec ++ " &#8212; " ++
 		render tableCaption sec ++ "<br>" ++ renderTable columnSpec tableBody sec
 	where
 		id_ = (if stripTab then replace "tab:" "" else id) $ render (head tableAbbrs) sec
@@ -259,7 +259,7 @@ renderFig :: Bool -> Figure -> Text
 renderFig stripFig Figure{..} =
 	xml "div" [("class", "figure"), ("id", id_)] $
 		figureSvg ++ "<br>" ++
-		"Figure " ++ simpleRender anchor{aText=simpleRender figureNumber, aHref="#" ++ id_} ++ " — " ++
+		"Figure " ++ simpleRender anchor{aText=simpleRender figureNumber, aHref="#" ++ id_} ++ " &#8212; " ++
 		simpleRender figureName
 	where id_ = (if stripFig then replace "fig:" "" else id) $ simpleRender figureAbbr
 
@@ -558,15 +558,31 @@ fileContent pathHome title body =
 		"</head>" ++
 		"<body><div class='wrapper'>" ++ body ++ "</div></body>" ++
 	"</html>"
-
-abbrAsPath :: LaTeX -> Text
-abbrAsPath
-	= replace "&lt;" "<"
-	. replace "&gt;" ">"
-	. simpleRender
-
-data SectionFileStyle = Bare | WithExtension | InSubdir
+	
+data SectionFileStyle = Bare | WithExtension | InSubdir | Windows
 	deriving (Eq, Read)
+
+sanitizeWindowsPath :: Text -> Text
+sanitizeWindowsPath
+	= replace "&lt;" "less"
+	. replace "<" "less"
+	. replace "%3c" "less"
+	. replace "&gt;" "greater"
+	. replace ">" "greater"
+	. replace "%3e" "greater"
+	. replace "*" "star"
+	. replace "::" "--"
+
+abbrAsPath :: SectionFileStyle -> LaTeX -> Text
+abbrAsPath sfs =
+	case sfs of
+		Windows ->
+			sanitizeWindowsPath
+			. simpleRender
+		_ ->
+			replace "&lt;" "<"
+			. replace "&gt;" ">"
+			. simpleRender
 
 doLink :: SectionFileStyle -> Link -> Text -> Text
 doLink sfs l = go . Text.splitOn (Text.pack (show l) ++ "/")
@@ -585,6 +601,10 @@ doLink sfs l = go . Text.splitOn (Text.pack (show l) ++ "/")
 			(InSubdir, TocToSection) -> u ++ "/"
 			(InSubdir, SectionToSection) -> "../" ++ u
 			(InSubdir, ToImage) -> "../" ++ idir ++ u
+			(Windows, SectionToToc) -> "index.html#" ++ u
+			(Windows, TocToSection) -> dotSlashForColon $ sanitizeWindowsPath u ++ ".html"
+			(Windows, SectionToSection) -> dotSlashForColon $ sanitizeWindowsPath u ++ ".html"
+			(Windows, ToImage) -> idir ++ u
 			(WithExtension, SectionToToc) -> "index.html#" ++ u
 			(WithExtension, TocToSection) -> dotSlashForColon u ++ ".html"
 			(WithExtension, SectionToSection) -> dotSlashForColon u ++ ".html"
