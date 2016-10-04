@@ -770,8 +770,8 @@ parseFile macros =
 	. replace "$$" "$"
 	. replace "\\hspace*" "\\hspace"
 	. newlineCurlies
-	. replace "``" "\\&x8220;"
-	. replace "''" "\\&x8221;"
+	. replace "``" "“"
+	. replace "''" "”"
 	. replace "\\rSec0" "\\rSec[0]"
 	. replace "\\rSec1" "\\rSec[1]"
 	. replace "\\rSec2" "\\rSec[2]"
@@ -1075,13 +1075,13 @@ indexKeyContent = ikc
 		ikc (TeXCommS "&") = "&"
 		ikc (TeXCommS "%") = "%"
 		ikc (TeXCommS "-") = ""
-		ikc (TeXCommS "ell") = "&#8467;"
+		ikc (TeXCommS "ell") = "ℓ"
 		ikc (TeXCommS "~") = "~"
 		ikc (TeXCommS "#") = "#"
 		ikc (TeXCommS "{") = "{"
 		ikc (TeXCommS "}") = "}"
 		ikc (TeXCommS s)
-			| Just r <- List.lookup s greekAlphabet = Text.pack r
+			| Just c <- List.lookup s greekAlphabet = Text.pack [c]
 		ikc (TeXCommS "tilde") = "~"
 		ikc (TeXCommS "^") = "^"
 		ikc (TeXCommS "\"") = "\""
